@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Gemini Word Challenge (GWC)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter & Noto Sans Thai -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'Inter', 'sans-serif'],
+                        mono: ['Courier New', 'monospace']
+                    },
+                    colors: {
+                        gemini: {
+                            50: '#f0f4ff',
+                            100: '#e0e9ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#1e1b4b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #a855f7, #6366f1, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        }
+        .letter-box {
+            transition: all 0.2s ease;
+        }
+        .letter-box:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl gradient-bg flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid font-black text-xl">✦</i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight gradient-text">Gemini Word Challenge</h1>
+                    <p class="text-xs text-slate-400">Interactive Vocabulary Game</p>
+                </div>
+            </div>
+            
+            <!-- Dynamic Score & Turn Display -->
+            <div id="game-status-bar" class="flex items-center gap-4 hidden">
+                <div class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                    <i class="fa-solid fa-trophy text-amber-400 text-sm"></i>
+                    <span class="text-xs text-slate-400">Score:</span>
+                    <span id="score-display" class="font-bold text-emerald-400 text-base">100</span>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-indigo-400 text-sm"></i>
+                    <span id="progress-display" class="font-semibold text-slate-200 text-sm">1/10</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="max-w-3xl w-full mx-auto p-4 flex-grow flex flex-col justify-center">
+
+        <div id="start-screen" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-8 text-center shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="w-20 h-20 mx-auto mb-6 rounded-2xl gradient-bg flex items-center justify-center text-white text-3xl shadow-xl shadow-indigo-500/20">
+                <i class="fa-solid fa-gamepad"></i>
+            </div>
+
+            <h2 class="text-2xl md:text-3xl font-extrabold mb-3">ยินดีต้อนรับสู่ <span class="gradient-text">GWC</span></h2>
+            <p class="text-slate-400 text-sm md:text-base max-w-lg mx-auto mb-6">
+                ท้าทายทักษะคำศัพท์ภาษาอังกฤษ 10 คำ สุ่มจากคลังคำศัพท์ พร้อมระบบคำใบ้ คำจำกัดความ และการเฉลยภาพ AI!
+            </p>
+
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 text-left max-w-md mx-auto mb-8 space-y-2 text-xs md:text-sm">
+                <div class="font-semibold text-indigo-400 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info"></i> กฎและระบบคะแนน (Game Rules)
+                </div>
+                <div class="flex justify-between text-slate-300">
+                    <span>• คะแนนเริ่มต้น (Starting Score):</span>
+                    <span class="font-bold text-amber-400">100 คะแนน</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                    <span>• ตอบถูกต้อง (Correct Answer):</span>
+                    <span class="font-bold text-emerald-400">+10 คะแนน</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                    <span>• ตอบผิด (Wrong Answer):</span>
+                    <span class="font-bold text-rose-400">-2 คะแนน</span>
+                </div>
+                <div class="flex justify-between text-slate-300">
+                    <span>• ปุ่มตัวช่วย "Unveil a Letter":</span>
+                    <span class="font-bold text-cyan-400">-1 คะแนน / สิทธิ์ 3 ครั้ง</span>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="gradient-bg hover:opacity-90 active:scale-95 transition text-white font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-indigo-500/25 flex items-center gap-2 mx-auto text-base cursor-pointer">
+                <i class="fa-solid fa-play"></i> เริ่มเล่นเกม (Start Session)
+            </button>
+        </div>
+
+        <div id="game-screen" class="hidden space-y-6">
+            
+            <!-- Card for Word & Clues -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative">
+                
+                <!-- Definition Box -->
+                <div class="bg-slate-800/80 border border-slate-700/80 rounded-xl p-4 mb-6">
+                    <div class="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                        <i class="fa-solid fa-book"></i> Definition / คำจำกัดความ
+                    </div>
+                    <!-- English Definition -->
+                    <p id="def-en" class="text-base md:text-lg font-medium text-slate-100 mb-2 leading-relaxed"></p>
+                    <!-- Thai Definition -->
+                    <p id="def-th" class="text-sm text-slate-400 border-t border-slate-700/50 pt-2"></p>
+                </div>
+
+                <!-- Word Display Container (Letters Inputs / Placeholders) -->
+                <div class="text-center py-4 mb-4">
+                    <p class="text-xs text-slate-400 mb-3 uppercase tracking-wider">Fill in the missing letters</p>
+                    <div id="letters-container" class="flex flex-wrap justify-center items-center gap-2">
+                        <!-- Input boxes injected dynamically -->
+                    </div>
+                </div>
+
+                <!-- Action Controls (Hint & Submit) -->
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-slate-800">
+                    <button id="hint-btn" onclick="useHint()" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 border border-slate-700 text-cyan-400 hover:text-cyan-300 px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-lightbulb"></i> Unveil a Letter <span id="hint-count-badge" class="bg-cyan-950 text-cyan-300 text-xs px-2 py-0.5 rounded-full border border-cyan-800">3/3 Left</span>
+                    </button>
+
+                    <button onclick="checkAnswer()" class="w-full sm:w-auto gradient-bg hover:opacity-90 active:scale-95 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition shadow-md flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i> ส่งคำตอบ (Submit)
+                    </button>
+                </div>
+
+                <!-- Feedback Toast / Alert -->
+                <div id="feedback-msg" class="hidden mt-4 p-3 rounded-xl text-center text-sm font-semibold"></div>
+            </div>
+
+            <!-- POST-ANSWER REVEAL CARD (Appears only after correct answer) -->
+            <div id="post-answer-card" class="hidden bg-slate-900 border border-emerald-500/40 rounded-2xl p-6 shadow-2xl space-y-4">
+                <div class="flex items-center gap-2 text-emerald-400 font-bold text-lg border-b border-slate-800 pb-3">
+                    <i class="fa-solid fa-circle-check text-xl"></i>
+                    <span>ตอบถูกต้อง! (Correct Answer Revealed)</span>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6 items-center">
+                    <!-- Image Generator Display -->
+                    <div class="space-y-2">
+                        <div class="relative aspect-video sm:aspect-square bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center">
+                            <img id="reveal-image" src="" alt="Word Illustration" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); document.getElementById('img-loader').classList.add('hidden');">
+                            <div id="img-loader" class="flex flex-col items-center gap-2 text-slate-500 text-xs p-4 text-center">
+                                <i class="fa-solid fa-spinner fa-spin text-2xl text-indigo-400"></i>
+                                <span>กำลังสร้างภาพประกอบ generative ด้วย Gemini...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Details Box -->
+                    <div class="space-y-4">
+                        <div>
+                            <span class="text-xs text-slate-400 uppercase tracking-wider">Word</span>
+                            <h3 id="reveal-word" class="text-3xl font-black text-indigo-400 tracking-wide"></h3>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-400 uppercase tracking-wider">Official Thai Translation (คำแปล)</span>
+                            <p id="reveal-translation" class="text-lg font-semibold text-slate-200 mt-0.5"></p>
+                        </div>
+
+                        <button onclick="nextQuestion()" class="w-full gradient-bg hover:opacity-90 active:scale-95 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base">
+                            <span>ข้อถัดไป (Next Word)</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="end-screen" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-8 text-center shadow-2xl relative">
+            <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-3xl">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+
+            <h2 class="text-2xl md:text-3xl font-extrabold mb-1">จบเกมชุดนี้แล้ว!</h2>
+            <p class="text-slate-400 text-sm mb-6">คุณทำภารกิจเรียนรู้คำศัพท์ 10 คำเรียบร้อยแล้ว</p>
+
+            <!-- Final Score Display -->
+            <div class="bg-slate-800/80 border border-slate-700/80 rounded-xl p-6 max-w-sm mx-auto mb-8">
+                <span class="text-xs text-slate-400 uppercase tracking-widest block mb-1">Final Score</span>
+                <span id="final-score" class="text-5xl font-black text-emerald-400">0</span>
+                <span class="text-slate-400 text-sm block mt-1">คะแนน</span>
+            </div>
+
+            <button onclick="startGame()" class="gradient-bg hover:opacity-90 active:scale-95 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-indigo-500/25 flex items-center gap-2 mx-auto text-base">
+                <i class="fa-solid fa-rotate-right"></i> เล่นใหม่อีกครั้ง (Play Again)
+            </button>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-slate-900 bg-slate-950 py-4 text-center text-xs text-slate-500">
+        <p>The Gemini Word Challenge (GWC) &copy; 2026 Interactive Word Game Builder</p>
+    </footer>
+
+    <script>
+        // RAW VOCABULARY DATASET FROM USER
+        const rawVocabData = [
+            { word: "Ask", trans: "ถาม, ขอร้อง" },
+            { word: "Answer", trans: "ตอบ, คำตอบ" },
+            { word: "Arrive", trans: "มาถึง" },
+            { word: "Always", trans: "เสมอ, ตลอดเวลา" },
+            { word: "About", trans: "เกี่ยวกับ, ประมาณ" },
+            { word: "Across", trans: "ข้าม, ทั่ว" },
+            { word: "Accept", trans: "ยอมรับ" },
+            { word: "Advice", trans: "คำแนะนำ" },
+            { word: "Agree", trans: "เห็นด้วย" },
+            { word: "Area", trans: "พื้นที่, บริเวณ" },
+            { word: "Angry", trans: "โกรธ" },
+            { word: "Appetite", trans: "ความอยากอาหาร" },
+            { word: "Attention", trans: "ความสนใจ" },
+            { word: "Available", trans: "ว่าง, มีอยู่" },
+            { word: "Awake", trans: "ตื่น" },
+            { word: "Buy", trans: "ซื้อ" },
+            { word: "Bring", trans: "นำมา, เอามา" },
+            { word: "Book", trans: "หนังสือ, จอง" },
+            { word: "Before", trans: "ก่อน" },
+            { word: "Behind", trans: "ข้างหลัง, ด้านหลัง" },
+            { word: "Begin", trans: "เริ่มต้น" },
+            { word: "Break", trans: "แตก, หยุดพัก" },
+            { word: "Bag", trans: "กระเป๋า" },
+            { word: "Build", trans: "สร้าง" },
+            { word: "Busy", trans: "ยุ่ง, ไม่ว่าง" },
+            { word: "Borrow", trans: "ขอยืม" },
+            { word: "Business", trans: "ธุรกิจ, กิจธุระ" },
+            { word: "Breakfast", trans: "อาหารเช้า" },
+            { word: "Brother", trans: "พี่ชาย/น้องชาย" },
+            { word: "Believe", trans: "เชื่อ" },
+            { word: "Call", trans: "โทร, เรียก" },
+            { word: "Come", trans: "มา" },
+            { word: "Can", trans: "สามารถ, กระป๋อง" },
+            { word: "Clean", trans: "ทำความสะอาด, สะอาด" },
+            { word: "Close", trans: "ปิด, ใกล้" },
+            { word: "Change", trans: "เปลี่ยน, การเปลี่ยนแปลง" },
+            { word: "Check", trans: "ตรวจสอบ" },
+            { word: "Carry", trans: "แบก, หิ้ว" },
+            { word: "Choose", trans: "เลือก" },
+            { word: "Cheap", trans: "ราคาถูก" },
+            { word: "City", trans: "เมือง" },
+            { word: "Coffee", trans: "กาแฟ" },
+            { word: "Conversation", trans: "บทสนทนา" },
+            { word: "Comfortable", trans: "สบาย, สะดวกสบาย" },
+            { word: "Customer", trans: "ลูกค้า" },
+            { word: "Do", trans: "ทำ" },
+            { word: "Drink", trans: "ดื่ม, เครื่องดื่ม" },
+            { word: "Drive", trans: "ขับรถ" },
+            { word: "Down", trans: "ลง" },
+            { word: "Day", trans: "วัน" },
+            { word: "Dinner", trans: "อาหารเย็น" },
+            { word: "Different", trans: "แตกต่างกัน" },
+            { word: "Difficult", trans: "ยาก" },
+            { word: "Direction", trans: "ทิศทาง, คำสั่ง" },
+            { word: "Discount", trans: "ส่วนลด" },
+            { word: "Dream", trans: "ฝัน, ความฝัน" },
+            { word: "Doctor", trans: "หมอ, แพทย์" },
+            { word: "Doubt", trans: "สงสัย, ความสงสัย" },
+            { word: "Door", trans: "ประตู" },
+            { word: "Duty", trans: "หน้าที่" },
+            { word: "Eat", trans: "กิน" },
+            { word: "End", trans: "จบ, จุดสิ้นสุด" },
+            { word: "Easy", trans: "ง่าย" },
+            { word: "Early", trans: "แต่เช้า, ก่อนเวลา" },
+            { word: "Every", trans: "ทุกๆ" },
+            { word: "Example", trans: "ตัวอย่าง" },
+            { word: "Excited", trans: "ตื่นเต้น" },
+            { word: "Enough", trans: "เพียงพอ" },
+            { word: "Enjoy", trans: "เพลิดเพลิน" },
+            { word: "Explain", trans: "อธิบาย" },
+            { word: "Entrance", trans: "ทางเข้า" },
+            { word: "Excuse", trans: "ข้อแก้ตัว, ขอโทษ" },
+            { word: "Exercise", trans: "ออกกำลังกาย" },
+            { word: "Expensive", trans: "ราคาแพง" },
+            { word: "Experience", trans: "ประสบการณ์" },
+            { word: "Find", trans: "ค้นหา, พบ" },
+            { word: "Feel", trans: "รู้สึก" },
+            { word: "Free", trans: "อิสระ, ว่าง, ฟรี" },
+            { word: "Fast", trans: "เร็ว" },
+            { word: "Far", trans: "ไกล" },
+            { word: "Family", trans: "ครอบครัว" },
+            { word: "Friend", trans: "เพื่อน" },
+            { word: "Food", trans: "อาหาร" },
+            { word: "Future", trans: "อนาคต" },
+            { word: "Follow", trans: "ตาม, ติดตาม" },
+            { word: "Forget", trans: "ลืม" },
+            { word: "Favorite", trans: "ที่ชื่นชอบ" },
+            { word: "Finger", trans: "นิ้วมือ" },
+            { word: "Flower", trans: "ดอกไม้" },
+            { word: "Foreign", trans: "ต่างประเทศ, ต่างชาติ" },
+            { word: "Go", trans: "ไป" },
+            { word: "Get", trans: "ได้รับ, เอา" },
+            { word: "Give", trans: "ให้" },
+            { word: "Good", trans: "ดี" },
+            { word: "Great", trans: "ยอดเยี่ยม, ใหญ่" },
+            { word: "Garden", trans: "สวน" },
+            { word: "Game", trans: "เกม, การแข่งขัน" },
+            { word: "Guest", trans: "แขก, ผู้มาเยือน" },
+            { word: "Goal", trans: "เป้าหมาย" },
+            { word: "Group", trans: "กลุ่ม" },
+            { word: "Ground", trans: "พื้นดิน" },
+            { word: "Grow", trans: "เติบโต, ปลูก" },
+            { word: "Guide", trans: "นำทาง, มัคคุเทศก์" },
+            { word: "Grocery", trans: "ของชำ" },
+            { word: "Grateful", trans: "รู้สึกขอบคุณ" },
+            { word: "Have", trans: "มี" },
+            { word: "Help", trans: "ช่วยเหลือ" },
+            { word: "Hear", trans: "ได้ยิน" },
+            { word: "Happy", trans: "มีความสุข" },
+            { word: "Home", trans: "บ้าน" },
+            { word: "High", trans: "สูง" },
+            { word: "Hard", trans: "ยาก, แข็ง, หนัก" },
+            { word: "Hold", trans: "ถือ, จับ" },
+            { word: "Hope", trans: "หวัง, ความหวัง" },
+            { word: "Hurry", trans: "รีบ, เร่งรีบ" },
+            { word: "Holiday", trans: "วันหยุด" },
+            { word: "Hungry", trans: "หิว" },
+            { word: "Health", trans: "สุขภาพ" },
+            { word: "Hospital", trans: "โรงพยาบาล" },
+            { word: "Habit", trans: "นิสัย" },
+            { word: "Is", trans: "เป็น, อยู่, คือ" },
+            { word: "If", trans: "ถ้า" },
+            { word: "In", trans: "ใน" },
+            { word: "Idea", trans: "ความคิด" },
+            { word: "Important", trans: "สำคัญ" },
+            { word: "Information", trans: "ข้อมูล" },
+            { word: "Inside", trans: "ข้างใน" },
+            { word: "Invite", trans: "เชิญ" },
+            { word: "Issue", trans: "ประเด็น, ปัญหา" },
+            { word: "Interested", trans: "สนใจ" },
+            { word: "Imagine", trans: "จินตนาการ" },
+            { word: "Improve", trans: "ปรับปรุง, ทำให้ดีขึ้น" },
+            { word: "Include", trans: "รวม, ประกอบด้วย" },
+            { word: "Instruction", trans: "คำแนะนำ, คำสั่ง" },
+            { word: "Instead", trans: "แทนที่จะ" },
+            { word: "Join", trans: "เข้าร่วม" },
+            { word: "Jump", trans: "กระโดด" },
+            { word: "Job", trans: "งาน" },
+            { word: "Journey", trans: "การเดินทาง" },
+            { word: "Judge", trans: "ตัดสิน, ผู้พิพากษา" },
+            { word: "Jacket", trans: "เสื้อแจ็คเก็ต" },
+            { word: "Jealous", trans: "อิจฉา" },
+            { word: "Joke", trans: "ตลก, เรื่องตลก" },
+            { word: "Joy", trans: "ความสุข, ความยินดี" },
+            { word: "Just", trans: "เพิ่งจะ, อย่างยุติธรรม" },
+            { word: "Jungle", trans: "ป่าทึบ" },
+            { word: "Jewelry", trans: "เครื่องประดับ" },
+            { word: "Junior", trans: "อายุน้อยกว่า, รุ่นน้อง" },
+            { word: "Junk", trans: "ของไร้ค่า, ขยะ" },
+            { word: "Justice", trans: "ความยุติธรรม" },
+            { word: "Know", trans: "รู้" },
+            { word: "Keep", trans: "เก็บไว้, รักษาไว้" },
+            { word: "Kind", trans: "ใจดี, ชนิด" },
+            { word: "Key", trans: "กุญแจ, สำคัญ" },
+            { word: "Kick", trans: "เตะ" },
+            { word: "Kitchen", trans: "ห้องครัว" },
+            { word: "Knock", trans: "เคาะ" },
+            { word: "Kid", trans: "เด็ก" },
+            { word: "King", trans: "พระราชา" },
+            { word: "Knife", trans: "มีด" },
+            { word: "Knowledge", trans: "ความรู้" },
+            { word: "Kilo", trans: "กิโล" },
+            { word: "Kindly", trans: "อย่างใจดี, กรุณา" },
+            { word: "Kiss", trans: "จูบ" },
+            { word: "Knee", trans: "หัวเข่า" },
+            { word: "Look", trans: "มอง, ดู" },
+            { word: "Like", trans: "ชอบ, เหมือน" },
+            { word: "Live", trans: "อาศัยอยู่, มีชีวิต" },
+            { word: "Leave", trans: "ออกจาก, ทิ้งไว้" },
+            { word: "Late", trans: "สาย, ช้า" },
+            { word: "Listen", trans: "ฟัง" },
+            { word: "Learn", trans: "เรียนรู้" },
+            { word: "Letter", trans: "จดหมาย, ตัวอักษร" },
+            { word: "Light", trans: "แสง, เบา" },
+            { word: "Lend", trans: "ให้ยืม" },
+            { word: "Lunch", trans: "อาหารกลางวัน" },
+            { word: "Language", trans: "ภาษา" },
+            { word: "Local", trans: "ท้องถิ่น" },
+            { word: "Lost", trans: "หาย, สูญหาย" },
+            { word: "Lovely", trans: "น่ารัก, สวยงาม" },
+            { word: "Make", trans: "ทำ, สร้าง" },
+            { word: "Meet", trans: "พบ" },
+            { word: "Move", trans: "เคลื่อนย้าย" },
+            { word: "Money", trans: "เงิน" },
+            { word: "Morning", trans: "ตอนเช้า" },
+            { word: "Mistake", trans: "ข้อผิดพลาด" },
+            { word: "Minute", trans: "นาที" },
+            { word: "Manage", trans: "จัดการ" },
+            { word: "Market", trans: "ตลาด" },
+            { word: "Matter", trans: "เรื่อง, สสาร" },
+            { word: "Meal", trans: "มื้ออาหาร" },
+            { word: "Memory", trans: "ความจำ, ความทรงจำ" },
+            { word: "Mirror", trans: "กระจก" },
+            { word: "Message", trans: "ข้อความ" },
+            { word: "Music", trans: "ดนตรี" },
+            { word: "Need", trans: "ต้องการ" },
+            { word: "New", trans: "ใหม่" },
+            { word: "Near", trans: "ใกล้" },
+            { word: "Never", trans: "ไม่เคย" },
+            { word: "Next", trans: "ถัดไป, ต่อไป" },
+            { word: "Noise", trans: "เสียงรบกวน" },
+            { word: "Name", trans: "ชื่อ" },
+            { word: "Night", trans: "กลางคืน" },
+            { word: "Note", trans: "บันทึก, โน้ต" },
+            { word: "Normal", trans: "ปกติ, ธรรมดา" },
+            { word: "Nature", trans: "ธรรมชาติ" },
+            { word: "Neighbor", trans: "เพื่อนบ้าน" },
+            { word: "Necessary", trans: "จำเป็น" },
+            { word: "Newspaper", trans: "หนังสือพิมพ์" },
+            { word: "Nervous", trans: "ประหม่า, กังวล" }
+        ];
+
+        let currentSessionWords = [];
+        let currentIndex = 0;
+        let score = 100;
+        let hintsRemaining = 3;
+        let currentWordObj = null;
+        let wordDefinitionEn = "";
+        let wordDefinitionTh = "";
+
+        // API Call via Gemini to fetch dictionary definitions
+        async function fetchDefinitions(word, translation) {
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            
+            const systemPrompt = "You are a professional dictionary assistant. For the given English word, provide a clear, concise English definition (1 sentence) and a natural Thai description/context explanation (1 sentence, NOT just direct translation). Return structured JSON.";
+            
+            const userPrompt = `Word: "${word}", Official Thai Meaning: "${translation}"`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            defEn: { type: "STRING", description: "Clear English definition" },
+                            defTh: { type: "STRING", description: "Thai descriptive explanation of meaning" }
+                        },
+                        propertyOrdering: ["defEn", "defTh"]
+                    }
+                }
+            };
+
+            try {
+                const res = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (res.ok) {
+                    const result = await res.json();
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (text) {
+                        return JSON.parse(text);
+                    }
+                }
+            } catch (e) {
+                console.error("Error fetching definitions:", e);
+            }
+
+            // Fallback definitions if API fails
+            return {
+                defEn: `Refers to the word related to: ${word.toLowerCase()}.`,
+                defTh: `ความหมายและบริบทที่เกี่ยวข้องกับ "${translation}"`
+            };
+        }
+
+        async function generateWordImage(word, translation) {
+            const imgEl = document.getElementById('reveal-image');
+            const loader = document.getElementById('img-loader');
+            
+            imgEl.classList.add('hidden');
+            loader.classList.remove('hidden');
+
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-image:generateContent?key=${apiKey}`;
+
+            const prompt = `A clean, vibrant, high-quality 3D digital illustration representing the concept of "${word}" (${translation}). Minimal background, colorful, modern design.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseModalities: ['TEXT', 'IMAGE']
+                }
+            };
+
+            try {
+                const res = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    const result = await res.json();
+                    const base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+                    if (base64Data) {
+                        imgEl.src = `data:image/png;base64,${base64Data}`;
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error("Image generation error:", e);
+            }
+
+            // Fallback image using placeholder service
+            imgEl.src = `https://placehold.co/400x400/312e81/ffffff?text=${encodeURIComponent(word)}`;
+        }
+
+        function startGame() {
+            // Pick 10 random words from dataset
+            const shuffled = [...rawVocabData].sort(() => 0.5 - Math.random());
+            currentSessionWords = shuffled.slice(0, 10);
+            
+            currentIndex = 0;
+            score = 100;
+            hintsRemaining = 3;
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('game-status-bar').classList.remove('hidden');
+
+            updateUIHeader();
+            loadQuestion();
+        }
+
+        function updateUIHeader() {
+            document.getElementById('score-display').innerText = score;
+            document.getElementById('progress-display').innerText = `${currentIndex + 1}/10`;
+            document.getElementById('hint-count-badge').innerText = `${hintsRemaining}/3 Left`;
+            
+            const hintBtn = document.getElementById('hint-btn');
+            if (hintsRemaining <= 0) {
+                hintBtn.disabled = true;
+            } else {
+                hintBtn.disabled = false;
+            }
+        }
+
+        async function loadQuestion() {
+            // Reset views
+            document.getElementById('post-answer-card').classList.add('hidden');
+            document.getElementById('feedback-msg').classList.add('hidden');
+            
+            currentWordObj = currentSessionWords[currentIndex];
+            const word = currentWordObj.word.toUpperCase();
+            const len = word.length;
+
+            // Show Loading state for definitions
+            document.getElementById('def-en').innerHTML = '<i class="fa-solid fa-spinner fa-spin text-indigo-400"></i> Loading definition...';
+            document.getElementById('def-th').innerHTML = 'กำลังโหลดคำจำกัดความ...';
+
+            updateUIHeader();
+
+            // Fetch En & Th Definitions asynchronously
+            const defs = await fetchDefinitions(currentWordObj.word, currentWordObj.trans);
+            document.getElementById('def-en').innerText = defs.defEn;
+            document.getElementById('def-th').innerText = `💡 ${defs.defTh}`;
+
+            // Calculate Initial Hint Characters according to rules:
+            // Short (<= 5 chars): reveal 2 letters (First and Last, or First two if needed)
+            // Long (> 5 chars): reveal 3 letters (e.g. A N _ _ _ R for ANSWER)
+            const lettersContainer = document.getElementById('letters-container');
+            lettersContainer.innerHTML = '';
+
+            let revealedIndices = new Set();
+            if (len <= 5) {
+                // Reveal 2 letters (Index 0 and Index 1 or Index len-1)
+                revealedIndices.add(0);
+                if (len > 1) revealedIndices.add(1);
+            } else {
+                // Reveal 3 letters (Index 0, Index 1, and Index len-1)
+                revealedIndices.add(0);
+                revealedIndices.add(1);
+                revealedIndices.add(len - 1);
+            }
+
+            // Create letter boxes
+            for (let i = 0; i < len; i++) {
+                const char = word[i];
+                const isRevealed = revealedIndices.has(i);
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.maxLength = 1;
+                input.dataset.index = i;
+                input.dataset.correctChar = char;
+
+                input.className = 'letter-box w-10 h-12 md:w-12 md:h-14 text-center text-xl font-bold uppercase rounded-xl border border-slate-700 bg-slate-800 text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50';
+
+                if (isRevealed) {
+                    input.value = char;
+                    input.disabled = true;
+                    input.classList.add('bg-slate-700/60', 'text-indigo-400', 'border-indigo-500/30');
+                } else {
+                    // Auto-advance focus logic
+                    input.addEventListener('input', (e) => {
+                        const val = e.target.value.toUpperCase();
+                        e.target.value = val;
+                        if (val) {
+                            // Find next empty un-disabled input
+                            let next = input.nextElementSibling;
+                            while (next && next.disabled) {
+                                next = next.nextElementSibling;
+                            }
+                            if (next) next.focus();
+                        }
+                    });
+
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Backspace' && !input.value) {
+                            let prev = input.previousElementSibling;
+                            while (prev && prev.disabled) {
+                                prev = prev.previousElementSibling;
+                            }
+                            if (prev) {
+                                prev.focus();
+                            }
+                        }
+                    });
+                }
+
+                lettersContainer.appendChild(input);
+            }
+        }
+
+        function useHint() {
+            if (hintsRemaining <= 0) return;
+
+            const inputs = Array.from(document.querySelectorAll('#letters-container input'));
+            // Find first unrevealed empty or filled input from left to right
+            const nextHiddenInput = inputs.find(input => !input.disabled);
+
+            if (nextHiddenInput) {
+                // Deduct 1 score
+                score = Math.max(0, score - 1);
+                hintsRemaining--;
+
+                // Reveal letter
+                const correctChar = nextHiddenInput.dataset.correctChar;
+                nextHiddenInput.value = correctChar;
+                nextHiddenInput.disabled = true;
+                nextHiddenInput.classList.add('bg-slate-700/60', 'text-cyan-400', 'border-cyan-500/40');
+
+                showFeedback("ใช้ตัวช่วย! เปิดเผย 1 ตัวอักษร (-1 คะแนน)", "info");
+                updateUIHeader();
+            } else {
+                showFeedback("ตัวอักษรทั้งหมดถูกเปิดเผยแล้ว!", "info");
+            }
+        }
+
+        function checkAnswer() {
+            const inputs = Array.from(document.querySelectorAll('#letters-container input'));
+            let userWord = "";
+            let isComplete = true;
+
+            inputs.forEach(input => {
+                if (!input.value) isComplete = false;
+                userWord += input.value.toUpperCase();
+            });
+
+            if (!isComplete) {
+                showFeedback("กรุณากรอกตัวอักษรให้ครบทุกช่อง!", "warning");
+                return;
+            }
+
+            const targetWord = currentWordObj.word.toUpperCase();
+
+            if (userWord === targetWord) {
+                // CORRECT ANSWER
+                score += 10;
+                updateUIHeader();
+                showFeedback("ถูกต้อง! +10 คะแนน", "success");
+
+                // Lock inputs
+                inputs.forEach(input => input.disabled = true);
+
+                // Reveal Post-Answer Card with Image & Official Thai Translation
+                document.getElementById('post-answer-card').classList.remove('hidden');
+                document.getElementById('reveal-word').innerText = currentWordObj.word;
+                document.getElementById('reveal-translation').innerText = currentWordObj.trans;
+
+                // Trigger generative image
+                generateWordImage(currentWordObj.word, currentWordObj.trans);
+
+            } else {
+                // WRONG ANSWER
+                score = Math.max(0, score - 2);
+                updateUIHeader();
+                showFeedback("ยังไม่ถูกต้อง ลองใหม่อีกครั้ง! (-2 คะแนน)", "error");
+            }
+        }
+
+        function showFeedback(msg, type) {
+            const fb = document.getElementById('feedback-msg');
+            fb.classList.remove('hidden', 'bg-emerald-900/50', 'text-emerald-300', 'bg-rose-900/50', 'text-rose-300', 'bg-amber-900/50', 'text-amber-300', 'bg-cyan-900/50', 'text-cyan-300');
+
+            if (type === 'success') {
+                fb.classList.add('bg-emerald-900/50', 'text-emerald-300', 'border', 'border-emerald-700/50');
+            } else if (type === 'error') {
+                fb.classList.add('bg-rose-900/50', 'text-rose-300', 'border', 'border-rose-700/50');
+            } else if (type === 'warning') {
+                fb.classList.add('bg-amber-900/50', 'text-amber-300', 'border', 'border-amber-700/50');
+            } else {
+                fb.classList.add('bg-cyan-900/50', 'text-cyan-300', 'border', 'border-cyan-700/50');
+            }
+
+            fb.innerText = msg;
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex < 10) {
+                loadQuestion();
+            } else {
+                // Session End
+                document.getElementById('game-screen').classList.add('hidden');
+                document.getElementById('end-screen').classList.remove('hidden');
+                document.getElementById('final-score').innerText = score;
+            }
+        }
+    </script>
+</body>
+</html>
